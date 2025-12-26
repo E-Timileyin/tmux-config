@@ -1,0 +1,211 @@
+############################################################
+# TMUX COMMAND CHEAT SHEET (PREFIX = Ctrl-a)
+#
+# ── Core ────────────────────────────────────────────────
+# Ctrl-a r        → Reload tmux config
+# Ctrl-a c        → Create new window
+# Ctrl-a ,        → Rename window
+# Ctrl-a &        → Kill window
+#
+# ── Pane Splits ─────────────────────────────────────────
+# Ctrl-a |        → Split pane horizontally (same path)
+# Ctrl-a -        → Split pane vertically (same path)
+#
+# ── Pane Navigation ─────────────────────────────────────
+# Ctrl-a h/j/k/l  → Move between panes (vim-style)
+# Alt  + h/j/k/l  → Move between panes (no prefix)
+#
+# ── Window Navigation ───────────────────────────────────
+# Alt + 1..9      → Jump directly to window 1–9
+#
+# ── Copy Mode (Vim-style) ───────────────────────────────
+# Ctrl-a [        → Enter copy mode
+# v               → Start selection
+# Ctrl-v          → Block selection
+# y               → Yank & exit copy mode
+#
+# ── Mouse ───────────────────────────────────────────────
+# Scroll / Click  → Scroll & select panes/windows
+#
+############################################################
+
+
+##### TERMINAL & INPUT #####
+
+# Proper 256-color + truecolor support
+set -g default-terminal "tmux-256color"
+set -ga terminal-overrides ",*:RGB"
+
+# Mouse + clipboard integration
+set -g mouse on
+set -g set-clipboard on
+
+
+##### PREFIX #####
+
+# Replace default Ctrl-b with Ctrl-a
+unbind C-b
+set -g prefix C-a
+bind-key C-a send-prefix
+
+
+##### PANE NAVIGATION (VIM STYLE) #####
+
+bind h select-pane -L
+bind j select-pane -D
+bind k select-pane -U
+bind l select-pane -R
+
+
+##### SPLITS (KEEP CURRENT PATH) #####
+
+unbind %
+bind | split-window -h -c "#{pane_current_path}"
+
+unbind '"'
+bind - split-window -v -c "#{pane_current_path}"
+
+
+##### CONFIG RELOAD #####
+
+unbind r
+bind r source-file $HOME/.config/tmux/tmux.conf
+
+
+##### WINDOW & PANE INDEXING #####
+
+# Start numbering at 1 (keyboard-friendly)
+set -g base-index 1
+set -g pane-base-index 1
+set-window-option -g pane-base-index 1
+
+# Renumber automatically after close
+set-option -g renumber-windows on
+
+
+##### COPY MODE (VIM) #####
+
+set-window-option -g mode-keys vi
+
+# Visual selection
+bind-key -T copy-mode-vi v send-keys -X begin-selection
+
+# Block selection
+bind-key -T copy-mode-vi C-v send-keys -X rectangle-toggle
+
+# Yank + exit
+bind-key -T copy-mode-vi y send-keys -X copy-selection-and-cancel
+
+# Disable mouse auto-copy
+unbind -T copy-mode-vi MouseDragEnd1Pane
+
+
+##### ALT KEY NAVIGATION #####
+
+# Alt + hjkl → switch panes
+bind -n M-h select-pane -L
+bind -n M-j select-pane -D
+bind -n M-k select-pane -U
+bind -n M-l select-pane -R
+
+
+##### ALT + NUMBER → WINDOW SWITCH #####
+
+bind -n M-1 select-window -t 1
+bind -n M-2 select-window -t 2
+bind -n M-3 select-window -t 3
+bind -n M-4 select-window -t 4
+bind -n M-5 select-window -t 5
+bind -n M-6 select-window -t 6
+bind -n M-7 select-window -t 7
+bind -n M-8 select-window -t 8
+bind -n M-9 select-window -t 9
+
+
+##### THEME — TOKYONIGHT MOON #####
+
+thm_bg="#222436"
+thm_fg="#c8d3f5"
+
+thm_cyan="#86e1fc"
+thm_magenta="#c099ff"
+thm_pink="#ff757f"
+thm_red="#ff757f"
+thm_green="#c3e88d"
+thm_yellow="#ffc777"
+thm_blue="#82aaff"
+thm_orange="#ff9e64"
+
+thm_black="#1b1d2b"
+thm_gray="#3a3f5a"
+thm_black4="#444a73"
+
+
+##### STATUS BAR CORE #####
+
+set -g status on
+set -g status-bg "${thm_bg}"
+set -g status-justify left
+set -g status-left-length 100
+set -g status-right-length 100
+
+
+##### MESSAGE STYLES #####
+
+set -g message-style "fg=${thm_cyan},bg=${thm_gray},align=centre"
+set -g message-command-style "fg=${thm_cyan},bg=${thm_gray},align=centre"
+
+
+##### PANE BORDERS #####
+
+set -g pane-border-style "fg=${thm_gray}"
+set -g pane-active-border-style "fg=${thm_blue}"
+
+
+##### WINDOW STYLES #####
+
+set -g window-status-activity-style "fg=${thm_fg},bg=${thm_bg},none"
+set -g window-status-separator ""
+set -g window-status-style "fg=${thm_fg},bg=${thm_bg},none"
+
+
+##### CURRENT WINDOW FORMAT #####
+
+# Shows:
+# index + ✓ + last 2 dirs of current pane path
+set -g window-status-current-format \
+"#[fg=${thm_blue},bg=${thm_bg}] #I: \
+#[fg=${thm_magenta},bg=${thm_bg}](✓) \
+#[fg=${thm_cyan},bg=${thm_bg}]#(echo '#{pane_current_path}' | rev | cut -d'/' -f-2 | rev) \
+#[fg=${thm_magenta},bg=${thm_bg}]"
+
+
+##### INACTIVE WINDOW FORMAT #####
+
+set -g window-status-format \
+"#[fg=${thm_blue},bg=${thm_bg}] #I: #[fg=${thm_fg},bg=${thm_bg}]#W"
+
+
+##### STATUS RIGHT #####
+
+# Window name • prefix state • session name
+set -g status-right \
+"#[fg=${thm_blue},bg=${thm_bg}]\
+#[fg=${thm_bg},bg=${thm_blue}] \
+#[fg=${thm_fg},bg=${thm_gray}] #W \
+#{?client_prefix,#[fg=${thm_magenta}],#[fg=${thm_cyan}]}#[bg=${thm_gray}]\
+#{?client_prefix,#[bg=${thm_magenta}],#[bg=${thm_cyan}]}#[fg=${thm_bg}] \
+#[fg=${thm_fg},bg=${thm_gray}] #S "
+
+
+##### STATUS LEFT #####
+
+# Minimal look
+set -g status-left ""
+
+
+##### MODES #####
+
+set -g clock-mode-colour "${thm_blue}"
+set -g mode-style "fg=${thm_blue} bg=${thm_black4} bold"
+
